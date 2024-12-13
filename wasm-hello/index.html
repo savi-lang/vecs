@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+  <canvas width="800" height="600" id="my_canvas"></canvas>
+  <script>
+    const canvas = document.getElementById("my_canvas");
+    const gl = canvas.getContext("webgl");
+    if (!gl) throw new Error("Failed to get a WebGL context for the canvas!");
+
+    let memory
+
+    const glBuffers = [];
+    const glShaderPrograms = [];
+
+    const imports = {
+      env: {
+        glBufferF32StaticDraw: function (ptr, len) {
+          console.log(memory.buffer, ptr, len);
+          const buffer = new Float32Array(memory.buffer, ptr, len);
+          const glBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer); // TODO: remove
+          gl.bufferData(gl.ARRAY_BUFFER, buffer, gl.STATIC_DRAW);
+          return glBuffers.push(glBuffer) - 1;
+        },
+
+        glBufferU16ElementsStaticDraw: function (ptr, len) {
+          console.log(memory.buffer, ptr, len);
+          const buffer = new Uint16Array(memory.buffer, ptr, len);
+          const glBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glBuffer); // TODO: remove
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, buffer, gl.STATIC_DRAW);
+          return glBuffers.push(glBuffer) - 1;
+        },
+
+        glShaderProgram: function (
+          vertexShaderSourcePtr, vertexShaderSourceLen,
+          fragmentShaderSourcePtr, fragmentShaderSourceLen
+        ) {
+          const vertexShaderSource = new TextDecoder().decode(
+            new Uint8Array(memory.buffer, vertexShaderSourcePtr, vertexShaderSourceLen)
+          );
+          const fragmentShaderSource = new TextDecoder().decode(
+            new Uint8Array(memory.buffer, fragmentShaderSourcePtr, fragmentShaderSourceLen)
+          );
+
+          const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+          gl.shaderSource(vertexShader, vertexShaderSource);
+          gl.compileShader(vertexShader);
+
+          const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+          gl.shaderSource(fragmentShader, fragmentShaderSource);
+          gl.compileShader(fragmentShader);
+
+          const program = gl.createProgram();
+          gl.attachShader(program, vertexShader);
+          gl.attachShader(program, fragmentShader);
+          gl.linkProgram(program);
+
+          const attrib_location = gl.getAttribLocation(program, "vertex_position");
+          if (attrib_location === -1) {
+            throw new Error("Failed to get the attribute location of vertex_position!");
+          }
+          gl.enableVertexAttribArray(attrib_location);
+          gl.vertexAttribPointer(attrib_location, 3, gl.FLOAT, false, 0, 0);
+
+          return glShaderPrograms.push(program) - 1;
+        },
+
+        glBufferBind: function (bufferIndex) {
+          console.log("glBufferBind", bufferIndex);
+          gl.bindBuffer(gl.ARRAY_BUFFER, glBuffers[bufferIndex]);
+        },
+
+        glBufferElementsBind: function (bufferIndex) {
+          console.log("glBufferElementsBind", bufferIndex);
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glBuffers[bufferIndex]);
+        },
+
+        glShaderProgramUse: function (programIndex) {
+          gl.useProgram(glShaderPrograms[programIndex]);
+        },
+
+        glClearWithColor: function (r, g, b, a) {
+          gl.clearColor(r, g, b, a);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+        },
+
+        glDrawElementsU16Triangles: function (count, offset) {
+          gl.drawElements(gl.TRIANGLES, count, gl.UNSIGNED_SHORT, offset);
+        },
+      }
+    };
+
+    WebAssembly.instantiateStreaming(fetch('./hello.wasm'), imports)
+      .then(results => {
+        memory = results.instance.exports.memory;
+
+        results.instance.exports.start(13);
+      });
+  </script>
+</body>
+
+</html>
