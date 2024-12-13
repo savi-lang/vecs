@@ -30,6 +30,7 @@
 #define _GNU_SOURCE
 #endif
 #include "platform.h"
+#include "panic.h"
 
 // We use the `perror` function to print an out of memory error,
 // but this isn't supported for the WASM target.
@@ -78,13 +79,7 @@ void* vecsint_virt_alloc(size_t bytes)
     ok = false;
 #endif
 
-  if(!ok)
-  {
-#ifndef PLATFORM_IS_WASM
-    perror("out of memory: ");
-    abort();
-#endif
-  }
+  if(!ok) vecs_panic("out of memory");
 
   return p;
 }
