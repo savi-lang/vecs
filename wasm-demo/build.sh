@@ -19,5 +19,7 @@ llc-18 -march=wasm32 -filetype=obj demo.wasm32.bc -o ./demo.o
 ls ./demo.o
 wasm-ld-18 ./demo.o -o ./demo.wasm --allow-undefined --no-entry --lto-O3 --export=start
 ls ./demo.wasm
-wasm2wat ./demo.wasm -o ./demo.wat
-ls ./demo.wat
+
+# For some reason, wasm2wat does not work with some of the opcodes we use?
+# wasm2wat ./demo.wasm -o ./demo.wat
+# ls ./demo.wat

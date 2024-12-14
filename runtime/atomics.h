@@ -15,9 +15,7 @@
 
 #if defined(__clang__)
 #  if __clang_major__ >= 4 || (__clang_major__ == 3 && __clang_minor__ >= 6)
-#    ifdef VECS_WANT_ATOMIC_DEFS
-#      include <stdatomic.h>
-#    endif
+#    include <stdatomic.h>
 #    define VECS_ATOMIC(T) T _Atomic
 #    define VECS_ATOMIC_RVALUE(T) T _Atomic
 #    define VECS_ATOMIC_INIT(T, N, V) T _Atomic N = V
@@ -58,81 +56,79 @@
 #define VECS_ATOMIC_ABA_PROTECTED_PTR(T) \
     alignas(sizeof(VECS_ABA_PROTECTED_PTR(T))) VECS_ABA_PROTECTED_PTR(T)
 
-#ifdef VECS_WANT_ATOMIC_DEFS
-#  define bigatomic_load_explicit(PTR, MO) \
+#define bigatomic_load_explicit(PTR, MO) \
     ({ \
       _Static_assert(sizeof(*(PTR)) == (2 * sizeof(void*)), ""); \
       (__typeof__(*(PTR)))__atomic_load_n(&(PTR)->raw, MO); \
     })
 
-#  define bigatomic_store_explicit(PTR, VAL, MO) \
+#define bigatomic_store_explicit(PTR, VAL, MO) \
     ({ \
       _Static_assert(sizeof(*(PTR)) == (2 * sizeof(void*)), ""); \
       __atomic_store_n(&(PTR)->raw, (VAL).raw, MO); \
     })
 
-#  define bigatomic_compare_exchange_strong_explicit(PTR, EXP, DES, SUCC, FAIL) \
+#define bigatomic_compare_exchange_strong_explicit(PTR, EXP, DES, SUCC, FAIL) \
     ({ \
       _Static_assert(sizeof(*(PTR)) == (2 * sizeof(void*)), ""); \
       __atomic_compare_exchange_n(&(PTR)->raw, &(EXP)->raw, (DES).raw, false, \
         SUCC, FAIL); \
     })
 
-#  ifdef VECS_ATOMIC_BUILTINS
-#    define memory_order_relaxed __ATOMIC_RELAXED
-#    define memory_order_consume __ATOMIC_CONSUME
-#    define memory_order_acquire __ATOMIC_ACQUIRE
-#    define memory_order_release __ATOMIC_RELEASE
-#    define memory_order_acq_rel __ATOMIC_ACQ_REL
-#    define memory_order_seq_cst __ATOMIC_SEQ_CST
+#ifdef VECS_ATOMIC_BUILTINS
+#  define memory_order_relaxed __ATOMIC_RELAXED
+#  define memory_order_consume __ATOMIC_CONSUME
+#  define memory_order_acquire __ATOMIC_ACQUIRE
+#  define memory_order_release __ATOMIC_RELEASE
+#  define memory_order_acq_rel __ATOMIC_ACQ_REL
+#  define memory_order_seq_cst __ATOMIC_SEQ_CST
 
-#    define atomic_load_explicit(PTR, MO) \
+#  define atomic_load_explicit(PTR, MO) \
       ({ \
         _Static_assert(sizeof(PTR) <= sizeof(void*), ""); \
         __atomic_load_n(PTR, MO); \
       })
 
-#    define atomic_store_explicit(PTR, VAL, MO) \
+#  define atomic_store_explicit(PTR, VAL, MO) \
       ({ \
         _Static_assert(sizeof(PTR) <= sizeof(void*), ""); \
         __atomic_store_n(PTR, VAL, MO); \
       })
 
-#    define atomic_exchange_explicit(PTR, VAL, MO) \
+#  define atomic_exchange_explicit(PTR, VAL, MO) \
       ({ \
         _Static_assert(sizeof(PTR) <= sizeof(void*), ""); \
         __atomic_exchange_n(PTR, VAL, MO); \
       })
 
-#    define atomic_compare_exchange_weak_explicit(PTR, EXP, DES, SUCC, FAIL) \
+#  define atomic_compare_exchange_weak_explicit(PTR, EXP, DES, SUCC, FAIL) \
       ({ \
         _Static_assert(sizeof(PTR) <= sizeof(void*), ""); \
         __atomic_compare_exchange_n(PTR, EXP, DES, true, SUCC, FAIL); \
       })
 
-#    define atomic_compare_exchange_strong_explicit(PTR, EXP, DES, SUCC, FAIL) \
+#  define atomic_compare_exchange_strong_explicit(PTR, EXP, DES, SUCC, FAIL) \
       ({ \
         _Static_assert(sizeof(PTR) <= sizeof(void*), ""); \
         __atomic_compare_exchange_n(PTR, EXP, DES, false, SUCC, FAIL); \
       })
 
-#    define atomic_fetch_add_explicit(PTR, VAL, MO) \
+#  define atomic_fetch_add_explicit(PTR, VAL, MO) \
       ({ \
         _Static_assert(sizeof(PTR) <= sizeof(void*), ""); \
         __atomic_fetch_add(PTR, VAL, MO); \
       })
 
-#    define atomic_fetch_sub_explicit(PTR, VAL, MO) \
+#  define atomic_fetch_sub_explicit(PTR, VAL, MO) \
       ({ \
         _Static_assert(sizeof(PTR) <= sizeof(void*), ""); \
         __atomic_fetch_sub(PTR, VAL, MO); \
       })
 
-#    define atomic_thread_fence(MO) \
+#  define atomic_thread_fence(MO) \
       __atomic_thread_fence(MO)
 
-#    undef VECS_ATOMIC_BUILTINS
-#  endif
+#  undef VECS_ATOMIC_BUILTINS
 #endif
 
 #if defined(PLATFORM_IS_X86)

@@ -26,8 +26,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#define VECS_WANT_ATOMIC_DEFS
-
 #include "pool.h"
 #include "alloc.h"
 #include "asserts.h"
@@ -309,7 +307,7 @@ static void track_alloc(void* p, size_t size)
 static void track_free(void* p, size_t size)
 {
   track_init();
-  vecsint_assert(!track.internal);
+  VECS_ASSERT(!track.internal);
 
   track.internal = true;
 
@@ -324,7 +322,7 @@ static void track_free(void* p, size_t size)
 static void track_push(pool_item_t* p, size_t length, size_t size)
 {
   track_init();
-  vecsint_assert(!track.internal);
+  VECS_ASSERT(!track.internal);
 
   track.internal = true;
   uint64_t tsc = vecsint_cpu_tick();
@@ -349,7 +347,7 @@ static void track_push(pool_item_t* p, size_t length, size_t size)
 static void track_pull(pool_item_t* p, size_t length, size_t size)
 {
   track_init();
-  vecsint_assert(!track.internal);
+  VECS_ASSERT(!track.internal);
 
   track.internal = true;
   uint64_t tsc = vecsint_cpu_tick();
@@ -593,7 +591,7 @@ static pool_block_t* pool_block_pull( size_t size)
   ANNOTATE_HAPPENS_AFTER(&in_pool_block_global);
 #endif
 
-  vecsint_assert(size <= block->size);
+  VECS_ASSERT(size <= block->size);
 
 #ifdef USE_VALGRIND
   ANNOTATE_HAPPENS_BEFORE_FORGET_ALL(&block->global);
@@ -652,7 +650,7 @@ static void* pool_block_get(size_t size)
     }
 
     // If we didn't find any suitable block, something has gone really wrong.
-    vecsint_assert(false);
+    VECS_ASSERT(false);
   }
 
   pool_block_t* block = pool_block_pull(size);
@@ -725,7 +723,7 @@ static void pool_push(pool_local_t* thread, pool_global_t* global)
   thread->pool = NULL;
   thread->length = 0;
 
-  vecsint_assert((p->length > 0) && (p->length <= global->count));
+  VECS_ASSERT((p->length > 0) && (p->length <= global->count));
   TRACK_PUSH((pool_item_t*)p, p->length, global->size);
 
   pool_central_t* top;
@@ -784,7 +782,7 @@ static pool_item_t* pool_pull(pool_local_t* thread, pool_global_t* global)
 
   pool_item_t* p = (pool_item_t*)top;
 
-  vecsint_assert((top->length > 0) && (top->length <= global->count));
+  VECS_ASSERT((top->length > 0) && (top->length <= global->count));
   TRACK_PULL(p, top->length, global->size);
 
   thread->pool = p->next;
@@ -865,7 +863,7 @@ void vecsint_pool_free(size_t index, void* p)
   VALGRIND_DISABLE_ERROR_REPORTING;
 #endif
 
-  vecsint_assert(index < POOL_COUNT);
+  VECS_ASSERT(index < POOL_COUNT);
   TRACK_FREE(p, POOL_MIN << index);
 
   pool_local_t* thread = &pool_local[index];
@@ -874,7 +872,7 @@ void vecsint_pool_free(size_t index, void* p)
   if(thread->length == global->count)
     pool_push(thread, global);
 
-  vecsint_assert(thread->length < global->count);
+  VECS_ASSERT(thread->length < global->count);
   pool_item_t* lp = (pool_item_t*)p;
   lp->next = thread->pool;
   thread->pool = lp;
@@ -914,7 +912,7 @@ void* vecsint_pool_alloc_size(size_t size)
   size = vecsint_pool_adjust_size(size);
   void* p = pool_alloc_size(size);
 
-  return p;
+  return NULL;
 }
 
 static void pool_free_size(size_t size, void* p)

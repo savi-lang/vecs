@@ -30,13 +30,8 @@
 #define _GNU_SOURCE
 #endif
 #include "platform.h"
+#include "harness.h"
 #include "panic.h"
-
-// We use the `perror` function to print an out of memory error,
-// but this isn't supported for the WASM target.
-#ifndef PLATFORM_IS_WASM
-#include <stdio.h>
-#endif
 
 #ifdef PLATFORM_IS_POSIX_BASED
 #include <sys/mman.h>
@@ -77,6 +72,12 @@ void* vecsint_virt_alloc(size_t bytes)
 #endif
   if(p == MAP_FAILED)
     ok = false;
+#elif defined(PLATFORM_IS_WASM)
+  p = vecs_harness_page_alloc((bytes + 0xffff) >> 16);
+  if (p == NULL)
+    ok = false;
+#else
+#  error "Unsupported platform"
 #endif
 
   if(!ok) vecs_panic("out of memory");

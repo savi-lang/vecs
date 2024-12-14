@@ -26,8 +26,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#define VECS_WANT_ATOMIC_DEFS
-
 #include "asserts.h"
 
 #ifndef PLATFORM_IS_WASM
@@ -60,7 +58,7 @@ typedef size_t stack_depth_t;
 typedef int stack_depth_t;
 #endif
 
-void vecsint_assert_fail(const char* expr, const char* file, size_t line,
+void VECS_ASSERT_fail(const char* expr, const char* file, size_t line,
   const char* func)
 {
   while(atomic_exchange_explicit(&assert_guard, true, memory_order_acq_rel))
@@ -95,7 +93,7 @@ void vecsint_assert_fail(const char* expr, const char* file, size_t line,
 
 #elif defined(PLATFORM_IS_WINDOWS)
 
-void vecsint_assert_fail(const char* expr, const char* file, size_t line,
+void VECS_ASSERT_fail(const char* expr, const char* file, size_t line,
   const char* func)
 {
   while(atomic_exchange_explicit(&assert_guard, true, memory_order_acq_rel))
@@ -180,7 +178,7 @@ void vecsint_assert_fail(const char* expr, const char* file, size_t line,
 
 #endif
 
-void vecsint_assert_disable_popups()
+void VECS_ASSERT_disable_popups()
 {
   // from LLVM utils/unittest/UnitTestMain/TestMain.cpp
 # if defined(_WIN32)

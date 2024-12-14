@@ -38,17 +38,18 @@ VECS_EXTERN_C_BEGIN
 #endif
 
 #if defined(VECS_NDEBUG)
-#  define vecsint_assert(expr) ((void)0)
+#  define VECS_ASSERT(expr) ((void)0)
 #else
-#  define vecsint_assert(expr) \
+#  define VECS_ASSERTS_ENABLED
+#  define VECS_ASSERT(expr) \
     ((expr) ? (void)0 : \
-      vecsint_assert_fail(#expr, __FILE__, __LINE__, __func__))
+      VECS_ASSERT_fail(#expr, __FILE__, __LINE__, __func__))
 #endif
 
-void vecsint_assert_fail(const char* expr, const char* file, size_t line,
+void VECS_ASSERT_fail(const char* expr, const char* file, size_t line,
   const char* func);
 
-void vecsint_assert_disable_popups();
+void VECS_ASSERT_disable_popups();
 
 VECS_EXTERN_C_END
 

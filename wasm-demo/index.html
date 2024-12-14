@@ -9,7 +9,13 @@
 
     const imports = {
       env: {
-        vecsint_harness_panic: function (ptr, len) {
+        vecs_harness_page_alloc: function (addPageCount) {
+          const ptr = memory.buffer.byteLength;
+          memory.grow(addPageCount);
+          return ptr;
+        },
+
+        vecs_harness_panic: function (ptr, len) {
           const message = new TextDecoder().decode(
             new Uint8Array(memory.buffer, ptr, len)
           );
