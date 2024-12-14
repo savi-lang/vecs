@@ -2,34 +2,12 @@
 <html>
 
 <body>
+  <script src="vecs.js"></script>
   <script>
-    let memory
-
-    class VecsPanicError extends Error {}
-
-    const imports = {
-      env: {
-        vecs_harness_page_alloc: function (addPageCount) {
-          const ptr = memory.buffer.byteLength;
-          memory.grow(addPageCount);
-          return ptr;
-        },
-
-        vecs_harness_panic: function (ptr, len) {
-          const message = new TextDecoder().decode(
-            new Uint8Array(memory.buffer, ptr, len)
-          );
-          throw new VecsPanicError(message);
-        },
-      }
-    };
-
-    WebAssembly.instantiateStreaming(fetch('./demo.wasm'), imports)
-      .then(results => {
-        memory = results.instance.exports.memory;
-
-        results.instance.exports.start(0);
-      });
+    Vecs.run({
+      url: "./demo.wasm",
+      workerCount: 1,
+    });
   </script>
 </body>
 
